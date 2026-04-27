@@ -1,120 +1,85 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { Label } from "./components/ui/label"
+import { Input } from "./components/ui/input"
+import { Button } from "./components/ui/button"
+import { useState } from "react"
+import { toast } from "sonner"
+import { BadgeQuestionMark } from "lucide-react"
+import { Help } from "./components/Help"
+
+
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [url, setUrl] = useState('')
+  const [showHelp, setShowHelp] = useState(false)
+
+  console.log(url)
+  const [shortUrl, setShortUrl] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function createShort() {
+
+    if (!url) {
+      toast('Digite uma URL', { position: 'top-right' })
+      return;
+    }
+    setLoading(true);
+
+    try {
+      const res = await fetch('http://localhost:3000/shorten', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      })
+
+      const data = await res.json();
+
+      toast(data.message, { position: 'top-right' })
+      console.log(data.message)
+      console.log(data)
+      setShortUrl(data.shortUrl);
+
+    } catch (error) {
+      console.log(error);
+      toast('Erro ao criar o link', { position: 'top-right' })
+    }
+
+    setLoading(false);
+  }
+
+  function handleCopy() {
+    if (url === '') {
+      toast('Nada para copiar', { position: 'top-right' })
+      return;
+    }
+    navigator.clipboard.writeText(shortUrl);
+
+    toast('Link copiado para a área de transferência', { position: 'top-right' })
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="flex justify-center items-center bg-gray-950 h-screen">
+      <div className="flex justify-center flex-col p-10 gap-5 items-center w-100 border shadow-2xl border-gray-200 rounded-lg bg-gray-500">
+        <h1 className="text-2xl font-bold text-shadow-lg text-white">Encurtador de Links</h1>
+        <div className="flex relative justify-center text-white items-center gap-2 flex-col">
+          <Label className="text-shadow-lg">Sua URL:</Label>
 
-      <div className="ticks"></div>
+          <div>
+            <Input value={url} onChange={(e) => setUrl(e.target.value)} className="bg-gray-400" />
+            <Button onClick={() => setShowHelp(prev => !prev)} className="absolute ml-2 " variant="secondary"><BadgeQuestionMark /></Button>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+          </div>
+          <Button onClick={() => createShort()} variant="secondary" className="cursor-pointer text-shadow-lg">Encurtar</Button>
+          {loading ? "Encurtando..." : ""}
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
+        <div className="flex justify-center text-white items-center gap-2 flex-col">
+          <Label className="text-shadow-lg">URL Gerada</Label>
+          <Input value={shortUrl} className="bg-gray-400" />
+          <Button onClick={() => handleCopy()} variant="secondary" className="cursor-pointer bg-green-500 text-shadow-lg text-white">Copiar</Button>
         </div>
-      </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      </div>
+      {showHelp && <Help onClose={() => setShowHelp(false)} />}
+    </div>
   )
 }
 

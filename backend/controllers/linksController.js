@@ -2,10 +2,24 @@ import { db } from "../database/db.js";
 import { nanoid } from "nanoid";
 
 export function createShortUrl(req, res){
-    const { url } = req.body;
+    let { url } = req.body;
     if(!url){
-        return res.status(400).json({ error: "URL é obrigatória"})
-        console.log(url);
+        return res.status(400).json({ message: "URL é obrigatória"})
+    }
+
+    
+    let parsedUrl;
+
+    try {
+        parsedUrl = new URL(url);
+
+    } catch (error) {
+        return res.status(400).json({ message: "URL inválida!"});
+        console.log(error);
+    }
+
+    if(parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:"){
+        return res.status(400).json({ message: "URL inválida! (Deve conter http: ou https:)"});
     }
     const code = nanoid(6);
     const sql = "INSERT INTO links (original_url, short_code) VALUES (?, ?)"
@@ -16,10 +30,10 @@ export function createShortUrl(req, res){
             return;
             
         }
-
-        res.json({
-            shortUrl: `http://localhost:3000/${code}`
-        })
+        return res.status(201).json({
+        message: "Link criado com sucesso",
+        shortUrl: `http://localhost:3000/${code}`
+    });
     })
 }
 
